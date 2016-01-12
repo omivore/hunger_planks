@@ -26,12 +26,12 @@ canvas.bind("<Button-1>",spawnGerm)
 
 root.update()
 
-#try:
-while True:
-    for i in range(len(germs)):
-        germs[i] = germs[i]()
-        root.update_idletasks()
-    root.update()
-    time.sleep(0.01)
-#except TclError:
-#    pass
+try:
+    while True:
+        for i in range(len(germs)):
+            germs[i].move()
+            root.update_idletasks()
+        root.update()
+        time.sleep(0.01)
+except TclError:
+    pass

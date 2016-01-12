@@ -10,48 +10,10 @@ class Germ:
         
         # Determines the starting speed and direction. velocity contains two 'speeds', and the signs
         # is the direction, left or right, or down or up, corresponding to negative or positive.
-        self.velocity = [None, None] # Initialize first so they work in the if and else's
-        if velocity[0] > 0:
-            self.velocity[0] = velocity[0] 
-            self.start = self.right
-        else:
-            self.velocity[0] = -velocity[0]
-            self.start = self.left
+        self.velocity = list(velocity)
 
-        if velocity[1] > 0:
-            self.velocity[1] = velocity[1]
-            self.start = self.up
-        else:
-            self.velocity[1] = -velocity[1]
-            self.start = self.down
-
-    def __call__(self):
-        return self.start
-
-    def up(self):
+    def move(self):
         xy = self.canvas.coords(self.id)
-        if xy[1] <= 0:
-            return self.down
-        self.canvas.move(self.id, 0, -self.velocity[1])
-        return self.up
-
-    def down(self):
-        xy = self.canvas.coords(self.id)
-        if xy[3] >= 499:
-            return self.up
-        self.canvas.move(self.id, 0, self.velocity[1])
-        return self.down
-
-    def right(self):
-        xy = self.canvas.coords(self.id)
-        if xy[2] >= 499:
-            return self.left
-        self.canvas.move(self.id, self.velocity[0], 0)
-        return self.right
-
-    def left(self):
-        xy = self.canvas.coords(self.id)
-        if xy[0] <= 0:
-            return self.right
-        self.canvas.move(self.id, -self.velocity[0], 0)
-        return self.left
+        if xy[1] <= 0 or xy[3] >= 499: self.velocity[1] *= -1
+        if xy[2] >= 499 or xy[0] <= 0: self.velocity[0] *= -1
+        self.canvas.move(self.id, *self.velocity)
