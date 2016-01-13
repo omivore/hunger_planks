@@ -30,23 +30,21 @@ class Germ:
     def move(self):
         """
             Moves the germ based on its velocity. Bounces off walls. (supposedly :P)
-            TODO: Make this canvas size independent.
         """
         xy = self.canvas.coords(self.id)
-        if xy[1] <= 0 or xy[3] >= 499: self.velocity[1] *= -1
-        if xy[2] >= 499 or xy[0] <= 0: self.velocity[0] *= -1
+        if xy[1] <= 0 or xy[3] >= self.canvas.winfo_height(): self.velocity[1] *= -1
+        if xy[2] >= self.canvas.winfo_width() or xy[0] <= 0: self.velocity[0] *= -1
         self.canvas.move(self.id, *self.velocity)
 
     @classmethod
-    def from_random(cls, canvas: "tkintercanvas", bounds: (int, int)):
+    def from_random(cls, canvas: "tkintercanvas"):
         """
             Creates a germ with a random position, color, and velocity. Needs some input, though.
 
             cls - the current class. Needed to make this a classmethod
             canvas - the tkinter canvas that the germ is being created on
-            bounds - the maximum boundaries the germ can be in; assumed to start at (0, 0)
         """
-        xy = (random.randint(0, bounds[0]), random.randint(0, bounds[1]))
+        xy = (random.randint(0, canvas.winfo_width()), random.randint(0, canvas.winfo_height()))
         color = random.choice(cls.germ_colors)
         velocity = (random.choice(cls.germ_speeds), random.choice(cls.germ_speeds))
         return cls(canvas, xy, color, velocity)
