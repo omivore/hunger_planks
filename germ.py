@@ -5,7 +5,7 @@ import itertools, random
 class Germ:
 
     germ_colors = ["green", "magenta", "purple", "yellow", "cyan", "snow", "lavenderblush", "salmon"]
-    speed_limit = 3
+    speed_limit = 3 
     germ_speeds = list(itertools.chain(range(-speed_limit, 0), range(1, speed_limit + 1)))
 
     def __init__(self, canvas: "tkinter.canvas", xy: (int, int), color, velocity: (int, int)):
@@ -22,10 +22,24 @@ class Germ:
         self.canvas = canvas
         self.id = self.canvas.create_oval(0, 0, 10, 10, fill=color)
         self.canvas.move(self.id, *xy)
+        self.color = color # Saving this mostly just for debugging purposes.
         
         # Determines the starting speed and direction. velocity contains two 'speeds', and the signs
         # is the direction, left or right, or down or up, corresponding to negative or positive.
         self.velocity = list(velocity)
+
+    @classmethod
+    def from_random(cls, canvas: "tkintercanvas"):
+        """
+            Creates a germ with a random position, color, and velocity. Needs some input, though.
+
+            cls - the current class. Needed to make this a classmethod
+            canvas - the tkinter canvas that the germ is being created on
+        """
+        xy = (random.randint(1, canvas.winfo_width()), random.randint(1, canvas.winfo_height()))
+        color = random.choice(cls.germ_colors)
+        velocity = (random.choice(cls.germ_speeds), random.choice(cls.germ_speeds))
+        return cls(canvas, xy, color, velocity)
 
     def move(self):
         """
@@ -53,15 +67,8 @@ class Germ:
 
         self.canvas.move(self.id, *self.velocity)
 
-    @classmethod
-    def from_random(cls, canvas: "tkintercanvas"):
+    def __repr__(self):
         """
-            Creates a germ with a random position, color, and velocity. Needs some input, though.
-
-            cls - the current class. Needed to make this a classmethod
-            canvas - the tkinter canvas that the germ is being created on
+            A useful representation for all major components of a germ.
         """
-        xy = (random.randint(1, canvas.winfo_width()), random.randint(1, canvas.winfo_height()))
-        color = random.choice(cls.germ_colors)
-        velocity = (random.choice(cls.germ_speeds), random.choice(cls.germ_speeds))
-        return cls(canvas, xy, color, velocity)
+        return "<A {0} at {1}, {2}, with speed of {5}, {6}>".format(self.color, *self.canvas.coords(self.id), *self.velocity)
