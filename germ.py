@@ -1,10 +1,10 @@
 # germ.py
 
-import itertools, random
+import itertools, random, math
 
 class Germ:
 
-    germ_colors = ["green", "magenta", "purple", "yellow", "cyan", "snow", "lavenderblush", "salmon"]
+    germ_colors = ["green", "magenta", "purple", "yellow", "cyan", "lavenderblush", "salmon"]
     speed_limit = 3 
     germ_speeds = list(itertools.chain(range(-speed_limit, 0), range(1, speed_limit + 1)))
 
@@ -17,11 +17,13 @@ class Germ:
             color - a tkinter-viable color (can be hex)
             velocity - the initial speeds and directions of the germ
         """
+        # The tag in tkinter representing all parts of this germ. Appended "str" to the front b/c tags don't work if they don't contain letters for some reason.
+        self.tag = "str" + str(id(self))
+
         # 'Adopts' the canvas, and then creates itself on the canvas with the color given.
         # Then moves itself to the given xy coordinate.
         self.canvas = canvas
-        self.tag = "str" + str(id(self))    # The tag in tkinter representing all parts of this germ. Appended "str" to the front b/c tags don't work if they don't contain letters for some reason.
-        self.body = self.canvas.create_oval(0, 0, 10, 10, fill=color, tags=self.tag)
+        self.body = self.canvas.create_polygon(*poly_oval(0, 0, 10, 10, 30), fill=color, tags=self.tag)
         self.canvas.move(self.body, *xy)
         self.color = color # Saving this mostly just for debugging purposes.
         
@@ -30,7 +32,7 @@ class Germ:
         self.velocity = list(velocity)
 
         # Create the pivots.
-        self.pivots = (self.canvas.create_oval(0, 0, 4, 4, fill=color, tag=self.tag), self.canvas.create_oval(0, 0, 4, 4, fill=color, tag=self.tag))
+        self.pivots = (self.canvas.create_polygon(*poly_oval(0, 0, 4, 4, 30), fill=color, tag=self.tag), self.canvas.create_polygon(*poly_oval(0, 0, 4, 4, 30), fill=color, tag=self.tag))
         self.canvas.move(self.pivots[0], xy[0] - 5, xy[1] - 10)
         self.canvas.move(self.pivots[1], xy[0] + 11, xy[1] - 10)
 
@@ -51,7 +53,7 @@ class Germ:
         """
             Moves the germ based on its velocity. Bounces off walls.
         """
-        xy = self.canvas.coords(self.tag)
+        xy = self.canvas.bbox(self.body)
         if xy[1] <= 0 or xy[3] >= self.canvas.winfo_height():
             self.velocity[1] *= -1
 
@@ -77,4 +79,25 @@ class Germ:
         """
             A useful representation for all major components of a germ.
         """
-        return "<A {0} at {1}, {2}, with speed of {5}, {6}>".format(self.color, *self.canvas.coords(self.id), *self.velocity)
+        return "<A {0} at {1}, {2}, with speed of {5}, {6}>".format(self.color, *self.canvas.bbox(self.body), *self.velocity)
+
+
+def poly_oval(x0: int, y0: int, x1: int, y1: int, edges: int = None):
+    """
+        Convenience function for Germ to use. It converts ovals to polygons, to allow rotation in tkinter canvas.
+    """
+    center_x = x0 + x1 / 2
+    center_y = y0 + y1 / 2
+    radius_x = center_x - x0
+    radius_y = center_y - y0
+
+    if not edges: edges = round((radius_x + radius_y) * .5)
+
+    step = math.atan(1) * 8 / edges
+    result = []
+    top = math.atan(1) * 6
+
+    for _ in range(edges):
+        result.append([center_x + radius_x * math.cos(top), center_y + radius_y * math.sin(top)])
+        top += step
+    return result
