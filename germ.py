@@ -5,17 +5,15 @@ import itertools, random, math
 class Germ:
 
     germ_colors = ["green", "magenta", "purple", "yellow", "cyan", "lavenderblush", "salmon"]
-    speed_limit = 3 
-    germ_speeds = list(itertools.chain(range(-speed_limit, 0), range(1, speed_limit + 1)))
+    speed = 15 # This is an angle, mind you. 
 
-    def __init__(self, canvas: "tkinter.canvas", xy: (int, int), color, velocity: (int, int)):
+    def __init__(self, canvas: "tkinter.canvas", xy: (int, int), color):
         """
             Creates a germ given the canvas on which to create it, the coordinates, color, and initial velocity.
 
             canvas - the tkinter canvas that the germ is being created on
             xy - coordinates; location of the germ. To prevent sticking, must be between 0 and bounding area, _exclusively_.
             color - a tkinter-viable color (can be hex)
-            velocity - the initial speeds and directions of the germ
         """
         # The tag in tkinter representing all parts of this germ. Appended "str" to the front b/c tags don't work if they don't contain letters for some reason.
         self.tag = "str" + str(id(self))
@@ -27,10 +25,6 @@ class Germ:
         self.canvas.move(self.body, *xy)
         self.color = color # Saving this mostly just for debugging purposes.
         
-        # Determines the starting speed and direction. velocity contains two 'speeds', and the signs
-        # is the direction, left or right, or down or up, corresponding to negative or positive.
-        self.velocity = list(velocity)
-
         # Create the pivots.
         self.pivots = (self.canvas.create_polygon(*poly_oval(0, 0, 4, 4, 30), fill=color, tag=self.tag), self.canvas.create_polygon(*poly_oval(0, 0, 4, 4, 30), fill=color, tag=self.tag))
         self.canvas.move(self.pivots[0], xy[0] - 5, xy[1] - 10)
@@ -46,34 +40,44 @@ class Germ:
         """
         xy = (random.randint(1, canvas.winfo_width()), random.randint(1, canvas.winfo_height()))
         color = random.choice(cls.germ_colors)
-        velocity = (random.choice(cls.germ_speeds), random.choice(cls.germ_speeds))
-        return cls(canvas, xy, color, velocity)
+        return cls(canvas, xy, color)
 
-    def move(self):
+    def move(self, direction: int, moving: int):
         """
             Moves the germ based on its velocity. Bounces off walls.
+
+            direction - A signed integer. If negative, pivot left. If positive, pivot right.
+            moving - Also a signed integer. If negative, don't move. If positive, move.
         """
-        xy = self.canvas.bbox(self.body)
-        if xy[1] <= 0 or xy[3] >= self.canvas.winfo_height():
-            self.velocity[1] *= -1
+        def rotate(canvas, tag, rotate_xy, angle):
+            angle = -angle if direction > 0 else angle # Flip angle to achieve clockwise rotation on the right pivot.
+            angle = angle * math.atan(1) * 4 / 180
+            for item in canvas.find_withtag(tag):
+                xy = []
+                for x, y in grouped(canvas.coords(item), 2):
+                    # Shift to the rotating origin first.
+                    x -= rotate_xy[0]
+                    y -= rotate_xy[1]
 
-            # If germ is stuck in the stuttering gap, this will boost it out.
-            if xy[1] + self.velocity[1] <= 0:
-                self.canvas.move(self.tag, 0, 0 - xy[1])
-            elif xy[3] + self.velocity[1] >= self.canvas.winfo_height():
-                self.canvas.move(self.tag, 0, self.canvas.winfo_height() - xy[3])
+                    # Rotate it.
+                    new_x = x * math.cos(angle) + y * math.sin(angle)
+                    new_y = -x * math.sin(angle) + y * math.cos(angle)
 
-        if xy[2] >= self.canvas.winfo_width() or xy[0] <= 0:
-            self.velocity[0] *= -1
+                    # Shift point back to original place.
+                    new_x += rotate_xy[0]
+                    new_y += rotate_xy[1]
 
-            # Same thing here.
-            if xy[0] + self.velocity[0] <= 0:
-                self.canvas.move(self.tag, 0 - xy[0], 0)
-            elif xy[2] + self.velocity[1] >= self.canvas.winfo_width():
-                self.canvas.move(self.tag, self.canvas.winfo_width() - xy[2], 0)
+                    xy += [int(new_x), int(new_y)]
+                canvas.coords(item, xy)
 
+        def oval_center(bounding_box):
+            x = (bounding_box[0] + bounding_box[2]) / 2
+            y = (bounding_box[1] + bounding_box[3]) / 2
+            return (x, y)
 
-        self.canvas.move(self.tag, *self.velocity)
+        pivot = oval_center(self.canvas.bbox(self.pivots[0]) if direction < 0 else self.canvas.bbox(self.pivots[1]))
+        speed = Germ.speed if moving > 0 else 0
+        rotate(self.canvas, self.tag, pivot, speed)
 
     def __repr__(self):
         """
@@ -101,3 +105,12 @@ def poly_oval(x0: int, y0: int, x1: int, y1: int, edges: int = None):
         result.append([center_x + radius_x * math.cos(top), center_y + radius_y * math.sin(top)])
         top += step
     return result
+
+def grouped(iterable, n: int):
+    """
+        Turns an iterable into chunks of n.
+
+        iterable - the long sequence of values.
+        n - the amount of items in each group.
+    """
+    return zip(*[iter(iterable)] * n)
