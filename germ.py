@@ -21,14 +21,14 @@ class Germ:
         # 'Adopts' the canvas, and then creates itself on the canvas with the color given.
         # Then moves itself to the given xy coordinate.
         self.canvas = canvas
-        self.body = self.canvas.create_polygon(*poly_oval(0, 0, 10, 10, 30), fill=color, tags=self.tag)
+        self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color, tags=self.tag)
         self.canvas.move(self.body, *xy)
         self.color = color # Saving this mostly just for debugging purposes.
         
         # Create the pivots.
-        self.pivots = (self.canvas.create_polygon(*poly_oval(0, 0, 4, 4, 30), fill=color, tag=self.tag), self.canvas.create_polygon(*poly_oval(0, 0, 4, 4, 30), fill=color, tag=self.tag))
-        self.canvas.move(self.pivots[0], xy[0] - 5, xy[1] - 10)
-        self.canvas.move(self.pivots[1], xy[0] + 11, xy[1] - 10)
+        self.pivots = (self.canvas.create_oval(0, 0, 5, 5, fill=color, tag=self.tag), self.canvas.create_oval(0, 0, 5, 5, fill=color, tag=self.tag))
+        self.canvas.move(self.pivots[0], xy[0] - 5, xy[1] - 11)
+        self.canvas.move(self.pivots[1], xy[0] + 11, xy[1] - 11)
 
     @classmethod
     def from_random(cls, canvas: "tkintercanvas"):
@@ -49,35 +49,42 @@ class Germ:
             direction - A signed integer. If negative, pivot left. If positive, pivot right.
             moving - Also a signed integer. If negative, don't move. If positive, move.
         """
-        def rotate(canvas, tag, rotate_xy, angle):
-            angle = -angle if direction > 0 else angle # Flip angle to achieve clockwise rotation on the right pivot.
-            angle = angle * math.atan(1) * 4 / 180
-            for item in canvas.find_withtag(tag):
-                xy = []
-                for x, y in grouped(canvas.coords(item), 2):
-                    # Shift to the rotating origin first.
-                    x -= rotate_xy[0]
-                    y -= rotate_xy[1]
-
-                    # Rotate it.
-                    new_x = x * math.cos(angle) + y * math.sin(angle)
-                    new_y = -x * math.sin(angle) + y * math.cos(angle)
-
-                    # Shift point back to original place.
-                    new_x += rotate_xy[0]
-                    new_y += rotate_xy[1]
-
-                    xy += [int(new_x), int(new_y)]
-                canvas.coords(item, xy)
-
         def oval_center(bounding_box):
-            x = (bounding_box[0] + bounding_box[2]) / 2
-            y = (bounding_box[1] + bounding_box[3]) / 2
+            x = math.floor((bounding_box[0] + bounding_box[2]) / 2)
+            y = math.floor((bounding_box[1] + bounding_box[3]) / 2)
             return (x, y)
 
-        pivot = oval_center(self.canvas.bbox(self.pivots[0]) if direction < 0 else self.canvas.bbox(self.pivots[1]))
+        def rotate_point(xy, pivot_xy, angle):
+            angle = -angle if direction > 0 else angle  # Flip the angle to get clockwise rotation when pivoting to the right.
+            angle = angle * math.atan(1) * 4 / 180
+            xy = list(xy)   # Make xy mutable; it's a tossaway variable anyway.
+
+            # Move to the origin.
+            xy[0] -= pivot_xy[0]
+            xy[1] -= pivot_xy[1]
+
+            # Rotate the point.
+            new_x = xy[0] * math.cos(angle) + xy[1] * math.sin(angle)
+            new_y = -xy[0] * math.sin(angle) + xy[1] * math.cos(angle)
+
+            # Move back.
+            new_x += pivot_xy[0]
+            new_y += pivot_xy[1]
+
+            return (new_x, new_y)
+
+        pivot = oval_center(self.canvas.bbox(self.pivots[0] if direction < 0 else self.pivots[1]))
         speed = Germ.speed if moving > 0 else 0
-        rotate(self.canvas, self.tag, pivot, speed)
+
+        body_center = oval_center(self.canvas.bbox(self.body))
+        other_pivot = self.pivots[0] if direction > 0 else self.pivots[1]
+        other_center = oval_center(self.canvas.bbox(other_pivot))
+
+        body_center_new = rotate_point(body_center, pivot, speed)
+        other_center_new = rotate_point(other_center, pivot, speed)
+
+        self.canvas.coords(self.body, (body_center_new[0] - 5, body_center_new[1] - 5, body_center_new[0] + 5, body_center_new[1] + 5))
+        self.canvas.coords(other_pivot, (other_center_new[0] - 2, other_center_new[1] - 2, other_center_new[0] + 2, other_center_new[1] + 2))
 
     def __repr__(self):
         """
@@ -85,26 +92,6 @@ class Germ:
         """
         return "<A {0} at {1}, {2}, with speed of {5}, {6}>".format(self.color, *self.canvas.bbox(self.body), *self.velocity)
 
-
-def poly_oval(x0: int, y0: int, x1: int, y1: int, edges: int = None):
-    """
-        Convenience function for Germ to use. It converts ovals to polygons, to allow rotation in tkinter canvas.
-    """
-    center_x = x0 + x1 / 2
-    center_y = y0 + y1 / 2
-    radius_x = center_x - x0
-    radius_y = center_y - y0
-
-    if not edges: edges = round((radius_x + radius_y) * .5)
-
-    step = math.atan(1) * 8 / edges
-    result = []
-    top = math.atan(1) * 6
-
-    for _ in range(edges):
-        result.append([center_x + radius_x * math.cos(top), center_y + radius_y * math.sin(top)])
-        top += step
-    return result
 
 def grouped(iterable, n: int):
     """
