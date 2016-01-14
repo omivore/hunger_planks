@@ -18,10 +18,10 @@ root.update()
 try:
     while True:
         for i in range(len(germs)):
-            germs[i].move()
+            germs[i].move(1, 1)#random.choice([-1, 1]), random.choice([-1, 1]))
             root.update_idletasks()
         root.update()
-        time.sleep(0.01)    # This is to make sure the germs don't move too fast to see.
+        time.sleep(.03)    # This is to make sure the germs don't move too fast to see.
 
 # When the window closes, the loop will run one last time and throw a TclError. Do nothing.
 except TclError:
