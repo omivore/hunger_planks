@@ -56,7 +56,7 @@ class Germ:
 
         def rotate_point(xy, pivot_xy, angle):
             angle = -angle if direction > 0 else angle  # Flip the angle to get clockwise rotation when pivoting to the right.
-            angle = angle * math.atan(1) * 4 / 180
+            angle = math.radians(angle)
             xy = list(xy)   # Make xy mutable; it's a tossaway variable anyway.
 
             # Move to the origin.
@@ -76,15 +76,15 @@ class Germ:
         pivot = oval_center(self.canvas.bbox(self.pivots[0] if direction < 0 else self.pivots[1]))
         speed = Germ.speed if moving > 0 else 0
 
-        body_center = oval_center(self.canvas.bbox(self.body))
+        # Calculate the other pivot coordinate.
         other_pivot = self.pivots[0] if direction > 0 else self.pivots[1]
-        other_center = oval_center(self.canvas.bbox(other_pivot))
+        other_center = rotate_point(oval_center(self.canvas.bbox(other_pivot)), pivot, speed)
 
-        body_center_new = rotate_point(body_center, pivot, speed)
-        other_center_new = rotate_point(other_center, pivot, speed)
+        # Calculate the body coordinate.
+        body_center = rotate_point(oval_center(self.canvas.bbox(self.body)), pivot, speed)
 
-        self.canvas.coords(self.body, (body_center_new[0] - 5, body_center_new[1] - 5, body_center_new[0] + 5, body_center_new[1] + 5))
-        self.canvas.coords(other_pivot, (other_center_new[0] - 2, other_center_new[1] - 2, other_center_new[0] + 2, other_center_new[1] + 2))
+        self.canvas.coords(self.body, (body_center[0] - 5, body_center[1] - 5, body_center[0] + 5, body_center[1] + 5))
+        self.canvas.coords(other_pivot, (other_center[0] - 2, other_center[1] - 2, other_center[0] + 2, other_center[1] + 2))
 
     def __repr__(self):
         """
