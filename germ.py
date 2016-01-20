@@ -80,19 +80,3 @@ class Germ:
         self.bearing = (self.bearing + speed * direction) % 360
 
         self.canvas.coords(self.body, (body_center[0] - 5, body_center[1] - 5, body_center[0] + 5, body_center[1] + 5))
-
-    def __repr__(self):
-        """
-            A useful representation for all major components of a germ.
-        """
-        return "<A {0} at {1}, {2}, with speed of {5}, {6}>".format(self.color, *self.canvas.bbox(self.body), *self.velocity)
-
-
-def grouped(iterable, n: int):
-    """
-        Turns an iterable into chunks of n.
-
-        iterable - the long sequence of values.
-        n - the amount of items in each group.
-    """
-    return zip(*[iter(iterable)] * n)
