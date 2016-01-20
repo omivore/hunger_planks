@@ -4,6 +4,7 @@
 from tkinter import *
 import time, random
 from germ import Germ
+from plank import Plank
 
 root = Tk()
 root.title("The Hunger Planks")
@@ -15,11 +16,17 @@ canvas.pack(fill=BOTH, expand=YES)
 root.update()
 
 germs = [Germ.from_random(canvas) for germ_count in range(3)]
+planks = [Plank(canvas, (200, 400), 210, 400, "blue")]
 try:
     while True:
         for i in range(len(germs)):
             germs[i].move(random.choice([-1, 1]), random.choice([-1, 1]))
             root.update_idletasks()
+
+        for i in range(len(planks)):
+            planks[i].move()
+            root.update_idletasks()
+
         root.update()
         time.sleep(.2)    # This is to make sure the germs don't move too fast to see.
 
