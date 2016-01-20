@@ -7,7 +7,7 @@ class Germ:
     germ_colors = ["green", "magenta", "purple", "yellow", "cyan", "lavenderblush", "salmon"]
     speed = 15 # This is an angle, mind you. 
 
-    def __init__(self, canvas: "tkinter.canvas", xy: (int, int), color):
+    def __init__(self, canvas: "tkinter.canvas", xy: (int, int), bearing: float, color):
         """
             Creates a germ given the canvas on which to create it, the coordinates, color, and initial velocity.
 
@@ -19,7 +19,7 @@ class Germ:
         # Then moves itself to the given xy coordinate.
         self.canvas = canvas
         self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color)
-        self.bearing = 0.0
+        self.bearing = bearing
         self.canvas.move(self.body, *xy)
         self.color = color # Saving this mostly just for debugging purposes.
         
@@ -32,8 +32,9 @@ class Germ:
             canvas - the tkinter canvas that the germ is being created on
         """
         xy = (random.randint(1, canvas.winfo_width()), random.randint(1, canvas.winfo_height()))
+        bearing = random.randrange(360)
         color = random.choice(cls.germ_colors)
-        return cls(canvas, xy, color)
+        return cls(canvas, xy, bearing, color)
 
     def move(self, direction: int, moving: int):
         """
