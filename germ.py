@@ -7,6 +7,7 @@ class Germ:
     germ_colors = ["green", "magenta", "purple", "yellow", "cyan", "lavenderblush", "salmon"]
     speed = 15 # This is an angle, mind you. 
 
+
     def __init__(self, state, canvas: "tkinter.canvas", xy: (int, int), bearing: float, color):
         """
             Creates a germ given the canvas on which to create it, the coordinates, color, and initial velocity.
@@ -15,6 +16,9 @@ class Germ:
             xy - coordinates; location of the germ. To prevent sticking, must be between 0 and bounding area, _exclusively_.
             color - a tkinter-viable color (can be hex)
         """
+        # The tag in tkinter representing all parts of this germ. Appended "str" to the front b/c tags don't work if they don't contain letters for some reason.
+        self.tag = "str" + str(id(self))
+
         # 'Adopts' the canvas, and then creates itself on the canvas with the color given.
         # Then moves itself to the given xy coordinate.
         self.state = state
@@ -53,6 +57,7 @@ class Germ:
             moving - Also a signed integer. If negative, don't move. If positive, move.
         """
         def rotate_point(xy, pivot_xy, angle):
+
             """
                 Rotates a point xy around another point pivot_xy by angle degrees.
             """
