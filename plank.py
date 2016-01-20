@@ -6,6 +6,7 @@ from germ import grouped
 class Plank():
 
     width = 6
+    colors = ["red", "black", "orange", "green", "lightgreen"]
 
     def __init__(self, canvas: "tkinter.canvas", start_xy: (int, int), bearing: float, length: int, color, speed: int = 2):
         self.canvas = canvas
@@ -23,6 +24,15 @@ class Plank():
         self.direction = bearing + random.choice([-1, 1]) * 90  # Set the direction as perpindicular to the bearing, randomly picking a side. This might change later on.
         self.speed = speed
         self.dead = False
+
+    @classmethod
+    def from_random(cls, canvas):
+        start_xy = (random.randint(10, canvas.winfo_width() - 10), random.randint(10, canvas.winfo_height() - 10))
+        bearing = random.randrange(360)
+        length = random.randrange(5, max(canvas.winfo_width(), canvas.winfo_height()) - 100, 8)
+        color = random.choice(Plank.colors)
+        speed = random.randrange(1, 4)
+        return cls(canvas, start_xy, bearing, length, color, speed)
 
     def move(self):
         self.canvas.move(self.body,

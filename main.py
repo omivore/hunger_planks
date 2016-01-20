@@ -11,6 +11,7 @@ root.title("The Hunger Planks")
 
 canvas = Canvas(root, width=500, height=500)
 canvas.bind("<Button-1>", lambda event: germs.append(Germ.from_random(get_state, canvas)))
+canvas.bind("<Button-3>", lambda event: planks.append(Plank.from_random(canvas)))
 canvas.pack(fill=BOTH, expand=YES)
 
 root.update()
@@ -18,13 +19,14 @@ root.update()
 def get_state():
     return germs + planks
 
-germs = [Germ.from_random(get_state, canvas) for germ_count in range(3)]
+germs = [Germ.from_random(get_state, canvas) for germ_count in range(30)]
 planks = [Border(canvas, (5, 10), 0, canvas.winfo_width() - 10, "blue"),
           Border(canvas, (5, canvas.winfo_height() - 10), 0, canvas.winfo_width() - 10, "green"),
           Border(canvas, (5, 10), 90, canvas.winfo_height() - 10, "red"),
           Border(canvas, (canvas.winfo_width() - 10, 10), 90, canvas.winfo_width() - 10, "yellow")]
-print([plank.body for plank in planks])
+
 try:
+    spawned = 0
     while True:
         for germ in germs:
             germ.move(random.choice([-1, 1]), random.choice([-1, 1]))
@@ -35,6 +37,11 @@ try:
             plank.move()
             if plank.dead: planks.remove(plank)
             root.update_idletasks()
+
+        if spawned > 5:
+            if random.choice([0, 1]): planks.append(Plank.from_random(canvas))
+            spawned = 0
+        else: spawned += 1
 
         root.update()
         time.sleep(.2)    # This is to make sure the germs don't move too fast to see.
