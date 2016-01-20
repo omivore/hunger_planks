@@ -19,9 +19,8 @@ class Plank():
         right_end = (right_start[0] + length * math.cos(math.radians(bearing)), 
                      right_start[1] + length * math.sin(math.radians(bearing)))
 
-        self.body = self.canvas.create_polygon(*left_start, *left_end, *right_end, *right_start, fill=color)
-        # Set the direction as perpindicular to the bearing, randomly picking a side. This might change later on.
-        self.direction = bearing + random.choice([-1, 1]) * 90
+        self.body = self.canvas.create_polygon(*left_start, *left_end, *right_end, *right_start, fill=color, tags="plank")
+        self.direction = bearing + random.choice([-1, 1]) * 90  # Set the direction as perpindicular to the bearing, randomly picking a side. This might change later on.
         self.speed = speed
         self.dead = False
 
@@ -35,3 +34,17 @@ class Plank():
     def die(self):
         self.canvas.delete(self.body)
         self.dead = True
+
+
+class Border(Plank):
+
+    def __init__(self, canvas: "tkinter.canvas", start_xy: (int, int), bearing: float, length: int, color):
+        super().__init__(canvas, start_xy, bearing, length, color, 0)
+
+    def move(self):
+        # Why would a border move? That would be death to all germs.
+        pass
+
+    def die(self):
+        # BORDERS NEVER DIE
+        pass
