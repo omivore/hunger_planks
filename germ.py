@@ -7,7 +7,7 @@ class Germ:
     germ_colors = ["green", "magenta", "purple", "yellow", "cyan", "lavenderblush", "salmon"]
     speed = 15 # This is an angle, mind you. 
 
-    def __init__(self, canvas: "tkinter.canvas", xy: (int, int), bearing: float, color):
+    def __init__(self, state, canvas: "tkinter.canvas", xy: (int, int), bearing: float, color):
         """
             Creates a germ given the canvas on which to create it, the coordinates, color, and initial velocity.
 
@@ -17,14 +17,17 @@ class Germ:
         """
         # 'Adopts' the canvas, and then creates itself on the canvas with the color given.
         # Then moves itself to the given xy coordinate.
+        self.state = state
         self.canvas = canvas
-        self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color)
         self.bearing = bearing
+        self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color, tags="germ")
         self.canvas.move(self.body, *xy)
+
+        self.dead = False
         self.color = color # Saving this mostly just for debugging purposes.
         
     @classmethod
-    def from_random(cls, canvas: "tkintercanvas"):
+    def from_random(cls, state, canvas: "tkintercanvas"):
         """
             Creates a germ with a random position, color, and velocity. Needs some input, though.
 
@@ -34,7 +37,7 @@ class Germ:
         xy = (random.randint(1, canvas.winfo_width()), random.randint(1, canvas.winfo_height()))
         bearing = random.randrange(360)
         color = random.choice(cls.germ_colors)
-        return cls(canvas, xy, bearing, color)
+        return cls(state, canvas, xy, bearing, color)
 
     def move(self, direction: int, moving: int):
         """
@@ -80,3 +83,25 @@ class Germ:
         self.bearing = (self.bearing + speed * direction) % 360
 
         self.canvas.coords(self.body, (body_center[0] - 5, body_center[1] - 5, body_center[0] + 5, body_center[1] + 5))
+
+        self.collision()    # Check for collisions with planks or germs.
+
+    def collision(self):
+        """
+            Checks for collisions with other objects, and reacts accordingly.
+        """
+        intruders = list(self.canvas.find_overlapping(*self.canvas.bbox(self.body)))
+        intruders.remove(self.body)    # Remove itself from the list.
+        for intruder in intruders:
+            if "plank" in self.canvas.gettags(intruder):
+                # Kill both parties if colliding with a plank.
+                for citizen in self.state():
+                    if citizen.body == intruder: citizen.die()
+                self.die()
+
+            elif "germ" in self.canvas.gettags(intruder):
+                print("Oh hi friend!")
+
+    def die(self):
+        self.canvas.delete(self.body)
+        self.dead = True
