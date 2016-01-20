@@ -22,14 +22,10 @@ class Germ:
         # Then moves itself to the given xy coordinate.
         self.canvas = canvas
         self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color, tags=self.tag)
+        self.bearing = 0.0
         self.canvas.move(self.body, *xy)
         self.color = color # Saving this mostly just for debugging purposes.
         
-        # Create the pivots.
-        self.pivots = (self.canvas.create_oval(0, 0, 5, 5, fill=color, tag=self.tag), self.canvas.create_oval(0, 0, 5, 5, fill=color, tag=self.tag))
-        self.canvas.move(self.pivots[0], xy[0] - 5, xy[1] - 11)
-        self.canvas.move(self.pivots[1], xy[0] + 11, xy[1] - 11)
-
     @classmethod
     def from_random(cls, canvas: "tkintercanvas"):
         """
@@ -55,6 +51,9 @@ class Germ:
             return (x, y)
 
         def rotate_point(xy, pivot_xy, angle):
+            """
+                Rotates a point xy around another point pivot_xy by angle degrees.
+            """
             angle = -angle if direction > 0 else angle  # Flip the angle to get clockwise rotation when pivoting to the right.
             angle = math.radians(angle)
             xy = list(xy)   # Make xy mutable; it's a tossaway variable anyway.
@@ -73,18 +72,16 @@ class Germ:
 
             return (new_x, new_y)
 
-        pivot = oval_center(self.canvas.bbox(self.pivots[0] if direction < 0 else self.pivots[1]))
+        pivots_bearing = self.bearing + direction * math.degrees(math.atan(.75))  # Multiply by direction to get whether to subtract or add to self.bearing.
+        body = oval_center(self.canvas.bbox(self.body))
+        pivot = (10 * math.cos(math.radians(pivots_bearing)) + body[0], 
+                 10 * math.sin(math.radians(pivots_bearing)) + body[1])
         speed = Germ.speed if moving > 0 else 0
 
-        # Calculate the other pivot coordinate.
-        other_pivot = self.pivots[0] if direction > 0 else self.pivots[1]
-        other_center = rotate_point(oval_center(self.canvas.bbox(other_pivot)), pivot, speed)
-
-        # Calculate the body coordinate.
         body_center = rotate_point(oval_center(self.canvas.bbox(self.body)), pivot, speed)
+        self.bearing = (self.bearing + speed * direction) % 360
 
         self.canvas.coords(self.body, (body_center[0] - 5, body_center[1] - 5, body_center[0] + 5, body_center[1] + 5))
-        self.canvas.coords(other_pivot, (other_center[0] - 2, other_center[1] - 2, other_center[0] + 2, other_center[1] + 2))
 
     def __repr__(self):
         """
