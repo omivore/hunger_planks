@@ -16,7 +16,10 @@ canvas.pack(fill=BOTH, expand=YES)
 root.update()
 
 germs = [Germ.from_random(canvas) for germ_count in range(3)]
-planks = [Plank(canvas, (200, 400), 210, 400, "blue")]
+planks = [Plank(canvas, (5, 10), 0, canvas.winfo_width() - 10, "blue", 0),
+          Plank(canvas, (5, canvas.winfo_height() - 10), 0, canvas.winfo_width() - 10, "green", 0),
+          Plank(canvas, (5, 10), 90, canvas.winfo_height() - 10, "red", 0),
+          Plank(canvas, (canvas.winfo_width() - 10, 10), 90, canvas.winfo_width() - 10, "yellow", 0)]
 try:
     while True:
         for i in range(len(germs)):
