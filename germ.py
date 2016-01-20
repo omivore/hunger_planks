@@ -39,6 +39,12 @@ class Germ:
         color = random.choice(cls.germ_colors)
         return cls(state, canvas, xy, bearing, color)
 
+    @staticmethod
+    def oval_center(bounding_box):
+        x = math.floor((bounding_box[0] + bounding_box[2]) / 2)
+        y = math.floor((bounding_box[1] + bounding_box[3]) / 2)
+        return (x, y)
+
     def move(self, direction: int, moving: int):
         """
             Moves the germ based on its velocity. Bounces off walls.
@@ -46,11 +52,6 @@ class Germ:
             direction - A signed integer. If negative, pivot left. If positive, pivot right.
             moving - Also a signed integer. If negative, don't move. If positive, move.
         """
-        def oval_center(bounding_box):
-            x = math.floor((bounding_box[0] + bounding_box[2]) / 2)
-            y = math.floor((bounding_box[1] + bounding_box[3]) / 2)
-            return (x, y)
-
         def rotate_point(xy, pivot_xy, angle):
             """
                 Rotates a point xy around another point pivot_xy by angle degrees.
@@ -74,12 +75,12 @@ class Germ:
             return (new_x, new_y)
 
         pivots_bearing = self.bearing + direction * math.degrees(math.atan(.75))  # Multiply by direction to get whether to subtract or add to self.bearing.
-        body = oval_center(self.canvas.bbox(self.body))
+        body = Germ.oval_center(self.canvas.bbox(self.body))
         pivot = (10 * math.cos(math.radians(pivots_bearing)) + body[0], 
                  10 * math.sin(math.radians(pivots_bearing)) + body[1])
         speed = Germ.speed if moving > 0 else 0
 
-        body_center = rotate_point(oval_center(self.canvas.bbox(self.body)), pivot, speed)
+        body_center = rotate_point(Germ.oval_center(self.canvas.bbox(self.body)), pivot, speed)
         self.bearing = (self.bearing + speed * direction) % 360
 
         self.canvas.coords(self.body, (body_center[0] - 5, body_center[1] - 5, body_center[0] + 5, body_center[1] + 5))
@@ -100,7 +101,17 @@ class Germ:
                 self.die()
 
             elif "germ" in self.canvas.gettags(intruder):
-                print("Oh hi friend!")
+                # If two germs bounce into each other, they'll bounce away from each other
+                self_xy = Germ.oval_center(self.canvas.bbox(self.body))
+                other_xy = Germ.oval_center(self.canvas.bbox(intruder))
+                offset_y = other_xy[1] - self_xy[1]
+                offset_x = other_xy[0] - self_xy[0]
+                self_new = (self_xy[0] - .5 * offset_x, self_xy[1] - .5 * offset_y)
+                other_new = (other_xy[0] + .5 * offset_x, other_xy[1] + .5 * offset_y)
+
+                # Apply the new repercussion-ed coordinates
+                self.canvas.coords(self.body, (self_new[0] - 5, self_new[1] - 5, self_new[0] + 5, self_new[1] + 5))
+                self.canvas.coords(intruder, (other_new[0] - 5, other_new[1] - 5, other_new[0] + 5, other_new[1] + 5))
 
     def die(self):
         self.canvas.delete(self.body)
