@@ -23,8 +23,15 @@ class Plank():
         self.body = self.canvas.create_polygon(*left_start, *left_end, *right_end, *right_start, fill=color)
         # Set the direction as perpindicular to the bearing, randomly picking a side. This might change later on.
         self.direction = bearing + random.choice([-1, 1]) * 90
+        self.dead = False
 
     def move(self):
         self.canvas.move(self.body,
                          Plank.speed * math.cos(math.radians(self.direction)),
                          Plank.speed * math.sin(math.radians(self.direction)))
+        if self.body not in self.canvas.find_overlapping(0, 0, self.canvas.winfo_width(), self.canvas.winfo_height()):
+            self.die()
+
+    def die(self):
+        self.canvas.delete(self.body)
+        self.dead = True

@@ -21,10 +21,12 @@ try:
     while True:
         for i in range(len(germs)):
             germs[i].move(random.choice([-1, 1]), random.choice([-1, 1]))
+            if germs[i].dead: germs.remove(germs[i])
             root.update_idletasks()
 
         for i in range(len(planks)):
             planks[i].move()
+            if planks[i].dead: planks.remove(planks[i])
             root.update_idletasks()
 
         root.update()

@@ -21,6 +21,8 @@ class Germ:
         self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color)
         self.bearing = 0.0
         self.canvas.move(self.body, *xy)
+
+        self.dead = False
         self.color = color # Saving this mostly just for debugging purposes.
         
     @classmethod
