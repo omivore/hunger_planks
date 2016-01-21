@@ -79,14 +79,14 @@ class Germ:
 
             return (new_x, new_y)
 
-        pivots_bearing = self.bearing + direction * math.degrees(math.atan(.75))  # Multiply by direction to get whether to subtract or add to self.bearing.
+        pivots_bearing = self.bearing + math.copysign(math.degrees(math.atan(.75)), direction)  # Take the sign of direction to get whether to subtract or add to self.bearing.
         body = Germ.oval_center(self.canvas.bbox(self.body))
         pivot = (10 * math.cos(math.radians(pivots_bearing)) + body[0], 
                  10 * math.sin(math.radians(pivots_bearing)) + body[1])
         speed = Germ.speed if moving > 0 else 0
 
         body_center = rotate_point(Germ.oval_center(self.canvas.bbox(self.body)), pivot, speed)
-        self.bearing = (self.bearing + speed * direction) % 360
+        self.bearing = (self.bearing + math.copysign(speed, direction)) % 360
 
         self.canvas.coords(self.body, (body_center[0] - 5, body_center[1] - 5, body_center[0] + 5, body_center[1] + 5))
 
