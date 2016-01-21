@@ -118,6 +118,33 @@ class Germ:
                 self.canvas.coords(self.body, (self_new[0] - 5, self_new[1] - 5, self_new[0] + 5, self_new[1] + 5))
                 self.canvas.coords(intruder, (other_new[0] - 5, other_new[1] - 5, other_new[0] + 5, other_new[1] + 5))
 
+    def seen(self, raycast_tag) -> bool:
+        """
+            Checks if the given tag intersects with self. Returns true or false accordingly.
+        """
+        center = self.oval_center(self.canvas.bbox(self.body))
+        bone = (center[0] - 5, center[1], center[0] + 5, center[1])
+        raycast = self.canvas.coords(self.canvas.find_withtag(raycast_tag)[0])
+
+        return lines_intersect(bone, raycast)
+
     def die(self):
+        """
+            Removes this germ from the canvas, then marks itself as dead so it can be removed from the overall state.
+        """
         self.canvas.delete(self.body)
         self.dead = True
+
+
+def lines_intersect(line1: (int, int, int, int), line2: (int, int, int, int)) -> bool:
+    """
+        Returns true if lines intersect, false if they don't. Line comes in the format of (end_x, end_y, otherend_x, otherend_y).
+    """
+    xdiff = (line1[0] - line1[2], line2[0] - line2[2])
+    ydiff = (line1[1] - line1[3], line2[1] - line2[3])
+
+    def determinate(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    div = determinate(xdiff, ydiff)
+    return div != 0
