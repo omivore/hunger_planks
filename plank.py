@@ -10,16 +10,10 @@ class Plank():
     def __init__(self, canvas: "tkinter.canvas", start_xy: (int, int), bearing: float, length: int, color, speed: int = 2):
         self.canvas = canvas
 
-        left_start = (start_xy[0] + (Plank.width / 2) * math.cos(math.radians(bearing - 90)), 
-                      start_xy[1] + (Plank.width / 2) * math.sin(math.radians(bearing - 90)))
-        right_start = (start_xy[0] + (Plank.width / 2) * math.cos(math.radians(bearing + 90)), 
-                       start_xy[1] + (Plank.width / 2) * math.sin(math.radians(bearing + 90)))
-        left_end = (left_start[0] + length * math.cos(math.radians(bearing)), 
-                    left_start[1] + length * math.sin(math.radians(bearing)))
-        right_end = (right_start[0] + length * math.cos(math.radians(bearing)), 
-                     right_start[1] + length * math.sin(math.radians(bearing)))
+        end_xy = (start_xy[0] + length * math.cos(math.radians(bearing)), 
+                  start_xy[1] + length * math.sin(math.radians(bearing)))
 
-        self.body = self.canvas.create_polygon(*left_start, *left_end, *right_end, *right_start, fill=color, tags="plank")
+        self.body = self.canvas.create_line(*start_xy, *end_xy, width=Plank.width, fill=color, tags="plank")
         self.direction = bearing + random.choice([-1, 1]) * 90  # Set the direction as perpindicular to the bearing, randomly picking a side. This might change later on.
         self.speed = speed
         self.dead = False
