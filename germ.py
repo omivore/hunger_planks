@@ -114,6 +114,7 @@ class Germ:
                 for citizen in list(sum(self.get_state(), [])):
                     if citizen.body == intruder: citizen.die()
                 self.die()
+                return
 
             elif "germ" in self.canvas.gettags(intruder):
                 # If two germs bounce into each other, they'll bounce away from each other
@@ -187,7 +188,7 @@ class Germ:
         self.canvas.delete(self.body)
         current = self.get_state()
         current[0].remove(self)
-        self.set_state(*current)
+        self.set_state(*current, self)
 
 
 def lines_intersect(line1: (int, int, int, int), line2: (int, int, int, int)) -> bool:

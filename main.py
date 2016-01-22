@@ -19,9 +19,11 @@ root.update()
 def get_state():
     return germs, planks
 
-def set_state(new_germs, new_planks):
+def set_state(new_germs, new_planks, newly_dead=None):
     germs = new_germs
     planks = new_planks
+    if newly_dead:
+        death.append(newly_dead)
 
 germs = [Germ.from_random(get_state, set_state, canvas) for germ_count in range(30)]
 planks = [Border(get_state, set_state, canvas, (5, 10), 0, canvas.winfo_width() - 10, "blue"),
@@ -30,6 +32,7 @@ planks = [Border(get_state, set_state, canvas, (5, 10), 0, canvas.winfo_width() 
           Border(get_state, set_state, canvas, (canvas.winfo_width() - 10, 10), 90, canvas.winfo_width() - 10, "yellow")]
 
 root.update()
+death = []
 try:
     spawned = 0
     while True:
@@ -47,7 +50,6 @@ try:
         else: spawned += 1
 
         root.update()
-        time.sleep(.2)    # This is to make sure the germs don't move too fast to see.
 
 # When the window closes, the loop will run one last time and throw a TclError. Do nothing.
 except TclError:

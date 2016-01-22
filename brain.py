@@ -18,8 +18,8 @@ class Brain():
     @staticmethod
     def nonlin(x, derivative=False):
         if derivative:
-            return x * (1 - x)
-        return 1 / (1 + np.exp(-x))
+            return np.divide(1, np.power(np.cosh(x), 2))
+        return np.tanh(x)
 
     def think(self, inputs: [float for _ in range(8)]) -> (float, float):
         inputs = np.array([inputs])
