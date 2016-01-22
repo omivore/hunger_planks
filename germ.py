@@ -9,7 +9,7 @@ class Germ:
     speed = 15 # This is an angle, mind you. 
 
 
-    def __init__(self, state, canvas: "tkinter.canvas", xy: (int, int), bearing: float, color, synapses: ("input_synapses", "hidden_synapses")=(None, None)):
+    def __init__(self, get_state, set_state, canvas: "tkinter.canvas", xy: (int, int), bearing: float, color, synapses: ("input_synapses", "hidden_synapses")=(None, None)):
         """
             Creates a germ given the canvas on which to create it, the coordinates, color, and initial velocity.
 
@@ -22,18 +22,18 @@ class Germ:
 
         # 'Adopts' the canvas, and then creates itself on the canvas with the color given.
         # Then moves itself to the given xy coordinate.
-        self.state = state
+        self.get_state = get_state
+        self.set_state = set_state
         self.canvas = canvas
         self.brain = Brain.from_random() if not (synapses[0] and synapses[1]) else Brain(*synapses)
         self.bearing = bearing
         self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color, tags="germ")
         self.canvas.move(self.body, *xy)
 
-        self.dead = False
         self.color = color # Saving this mostly just for debugging purposes.
         
     @classmethod
-    def from_random(cls, state, canvas: "tkintercanvas"):
+    def from_random(cls, get_state, set_state, canvas: "tkintercanvas"):
         """
             Creates a germ with a random position, color, and velocity. Needs some input, though.
 
@@ -43,7 +43,7 @@ class Germ:
         xy = (random.randint(1, canvas.winfo_width()), random.randint(1, canvas.winfo_height()))
         bearing = random.randrange(360)
         color = random.choice(cls.germ_colors)
-        return cls(state, canvas, xy, bearing, color)
+        return cls(get_state, set_state, canvas, xy, bearing, color)
 
     @staticmethod
     def oval_center(bounding_box):
@@ -111,7 +111,7 @@ class Germ:
         for intruder in intruders:
             if "plank" in self.canvas.gettags(intruder):
                 # Kill both parties if colliding with a plank.
-                for citizen in self.state():
+                for citizen in list(sum(self.get_state(), [])):
                     if citizen.body == intruder: citizen.die()
                 self.die()
 
@@ -151,7 +151,7 @@ class Germ:
             sightline = self.canvas.create_line(*xy, *end, tags="raycast")
 
             seen = dict()
-            for citizen in [citizen for citizen in self.state() if citizen != self]:
+            for citizen in [citizen for citizen in list(sum(self.get_state(), [])) if citizen != self]:
                 intersect = citizen.seen("raycast")
                 if intersect:
                     seen[citizen] = intersect
@@ -182,10 +182,12 @@ class Germ:
 
     def die(self):
         """
-            Removes this germ from the canvas, then marks itself as dead so it can be removed from the overall state.
+            Removes this germ from the canvas, then removes itself from the world.
         """
         self.canvas.delete(self.body)
-        self.dead = True
+        current = self.get_state()
+        current[0].remove(self)
+        self.set_state(*current)
 
 
 def lines_intersect(line1: (int, int, int, int), line2: (int, int, int, int)) -> bool:
