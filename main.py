@@ -25,12 +25,12 @@ planks = [Border(canvas, (5, 10), 0, canvas.winfo_width() - 10, "blue"),
           Border(canvas, (5, 10), 90, canvas.winfo_height() - 10, "red"),
           Border(canvas, (canvas.winfo_width() - 10, 10), 90, canvas.winfo_width() - 10, "yellow")]
 
+root.update()
 try:
     spawned = 0
     while True:
         for germ in germs:
-            print(germ.sight())
-            germ.move(random.choice([-1, 1]), random.choice([-1, 1]))
+            germ.execute()
             if germ.dead: germs.remove(germ)
             root.update_idletasks()
 

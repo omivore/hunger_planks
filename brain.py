@@ -4,10 +4,16 @@ import numpy as np
 
 class Brain():
 
-    def __init__(self):
-        self.past_values = np.zeroes(10)
-        self.input_synapses = 2 * np.random.random((18, 10)) - 1
-        self.hidden_synapses = 2 * np.random.random((10, 10)) - 1
+    def __init__(self, input_synapses, hidden_synapses):
+        self.past_values = np.zeros(10)
+        self.input_synapses = input_synapses
+        self.hidden_synapses = hidden_synapses
+
+    @classmethod
+    def from_random(cls):
+        input_synapses = 2 * np.random.random((8, 10)) - 1
+        hidden_synapses = 2 * np.random.random((10, 10)) - 1
+        return cls(input_synapses, hidden_synapses)
 
     @staticmethod
     def nonlin(x, derivative=False):
@@ -15,12 +21,10 @@ class Brain():
             return x * (1 - x)
         return 1 / (1 + np.exp(-x))
 
-    def think(self, inputs: [float for _ in range(8)]):
-        # Here's the inputs...
-        inputs = np.array(inputs)
+    def think(self, inputs: [float for _ in range(8)]) -> (float, float):
+        inputs = np.array([inputs])
         # Use that to generate the outputs (input combined with the previous hidden layer)
-        ouputs = nonlin(np.dot(inputs, self.input_synapses) + np.dot(self.pas_values[-1], self.hidden_synapses))
+        outputs = Brain.nonlin(np.dot(inputs, self.input_synapses) + np.dot(self.past_values, self.hidden_synapses))
         self.past_values = outputs
 
-        print(outputs)
-        return (outputs[0], outputs[1]) # Return two of the neurons' outputs. Doesn't really matter which.
+        return (outputs[0][0], outputs[0][1]) # Return two of the neurons' outputs. Doesn't really matter which.
