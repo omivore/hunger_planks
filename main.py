@@ -29,6 +29,7 @@ try:
     spawned = 0
     while True:
         for germ in germs:
+            print(germ.sight())
             germ.move(random.choice([-1, 1]), random.choice([-1, 1]))
             if germ.dead: germs.remove(germ)
             root.update_idletasks()

@@ -1,6 +1,7 @@
 # plank.py
 
 import math, random
+from germ import lines_intersect
 
 class Plank():
 
@@ -33,6 +34,12 @@ class Plank():
                          self.speed * math.sin(math.radians(self.direction)))
         if self.body not in self.canvas.find_overlapping(0, 0, self.canvas.winfo_width(), self.canvas.winfo_height()):
             self.die()
+
+    def seen(self, raycast_tag):
+        bone = self.canvas.coords(self.body)
+        raycast = self.canvas.coords(self.canvas.find_withtag(raycast_tag)[0])
+
+        return lines_intersect(bone, raycast)
 
     def die(self):
         self.canvas.delete(self.body)

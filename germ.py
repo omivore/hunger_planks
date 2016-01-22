@@ -128,6 +128,48 @@ class Germ:
 
         return lines_intersect(bone, raycast)
 
+    def sight(self) -> [float for _ in range(8)]:
+        """
+            Raycasts in eight directions and gets the object (if any) in that direction. If there is an object, this will compute the distance proportionately.
+            If the object (if any) is a plank, then the float will be negative. If another germ, then it will be positive. If there isn't an object, then 0.
+        """
+        xy = Germ.oval_center(self.canvas.bbox(self.body))
+        sight_bearings = [offset + self.bearing for offset in range(0, 360, 45)]
+        sights = []     # Our results array.
+        for bearing in sight_bearings:
+            end = (xy[0] + 132 * math.cos(math.radians(bearing)), xy[1] + 132 * math.sin(math.radians(bearing)))
+            sightline = self.canvas.create_line(*xy, *end, tags="raycast")
+
+            seen = dict()
+            for citizen in [citizen for citizen in self.state() if citizen != self]:
+                intersect = citizen.seen("raycast")
+                if intersect:
+                    seen[citizen] = intersect
+            self.canvas.delete(sightline)
+
+            # For each object, calculate the distance away from self. The closest is the one the eye sees.
+            closest = (None, 133)   # This will be the closest citizen, and then the distance.
+            for citizen in seen:
+                distance = math.hypot(seen[citizen][0] - xy[0], seen[citizen][1] - xy[1])
+                if distance < closest[1]: closest = (citizen, distance)
+
+            # If closest is still none, then nothing's within the range of the germ.
+            if not closest[0]:
+                sights.append(0)
+                continue
+
+            # Generate result based on the distance.
+            scaled_distance = 1 - (closest[1] / 132)        # Normalizes the distance so it's between 0 and 1, where the smaller the number, the farther away it is.
+            proportioned_distance = scaled_distance ** 2    # Squares the distance to mimic light intensity (see inverse-square law).
+
+            # See if the object seen is a germ or a plank, and change the sign of this eye's result accordingly.
+            if "germ" in self.canvas.gettags(closest[0].body):
+                sights.append(math.copysign(proportioned_distance, 1))
+            else:   # Then citizen must be a plank. Run!
+                sights.append(math.copysign(proportioned_distance, -1))
+
+        return sights
+
     def die(self):
         """
             Removes this germ from the canvas, then marks itself as dead so it can be removed from the overall state.
@@ -138,8 +180,22 @@ class Germ:
 
 def lines_intersect(line1: (int, int, int, int), line2: (int, int, int, int)) -> bool:
     """
-        Returns true if lines intersect, false if they don't. Line comes in the format of (end_x, end_y, otherend_x, otherend_y).
+        Returns point of intersection if lines intersect, false if they don't. Lines comes in the format of (end_x, end_y, otherend_x, otherend_y).
     """
+    if intersects(line1, line2):
+        return intersection(line1, line2)
+    else: return False
+
+def intersects(line1, line2) -> bool:
+    def ccw(point1, point2, point3):
+        """
+            Checks if triplet is counter clockwise.
+        """
+        return (point3[1] - point1[1]) * (point2[0] - point1[0]) > (point2[1] - point1[1]) * (point3[0] - point1[0])
+    return ccw((line1[0], line1[1]), (line2[0], line2[1]), (line2[2], line2[3])) != ccw((line1[2], line1[3]), (line2[0], line2[1]), (line2[2], line2[3])) and \
+           ccw((line1[0], line1[1]), (line1[2], line1[3]), (line2[0], line2[1])) != ccw((line1[0], line1[1]), (line1[2], line1[3]), (line2[2], line2[3]))
+
+def intersection(line1, line2):
     xdiff = (line1[0] - line1[2], line2[0] - line2[2])
     ydiff = (line1[1] - line1[3], line2[1] - line2[3])
 
@@ -147,4 +203,10 @@ def lines_intersect(line1: (int, int, int, int), line2: (int, int, int, int)) ->
         return a[0] * b[1] - a[1] * b[0]
 
     div = determinate(xdiff, ydiff)
-    return div != 0
+    if div == 0:
+        return False
+
+    d = (determinate((line1[0], line1[1]), (line1[2], line1[3])), determinate((line2[0], line2[1]), (line2[2], line2[3])))
+    x = determinate(d, xdiff) / div
+    y = determinate(d, ydiff) / div
+    return x, y
