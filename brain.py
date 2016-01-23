@@ -1,6 +1,7 @@
 # brain.py
 
 import numpy as np
+import random
 
 class Brain():
 
@@ -13,6 +14,30 @@ class Brain():
     def from_random(cls):
         input_synapses = 2 * np.random.random((8, 10)) - 1
         hidden_synapses = 2 * np.random.random((10, 10)) - 1
+        return cls(input_synapses, hidden_synapses)
+
+    @classmethod
+    def cross_mutate(cls, brains):
+        # First build input_synapses.
+        input_synapses = np.empty([8, 10])
+        for i in range(8):
+            for j in range(10):
+                input_synapses[i][j] = random.choice(brains).input_synapses[i][j]
+        # Then do the same with hidden_synapses.
+        hidden_synapses = np.empty([10, 10])
+        for i in range(10):
+            for j in range(10):
+                hidden_synapses[i][j] = random.choice(brains).hidden_synapses[i][j]
+
+        # Mutate random weights in the synapses randomly.
+        for _ in range(random.randrange(10)):      # Mutate up to ten times.
+            if random.choice([-1, 1]):      # Flip a coin to determine if we're going to mutate.
+                continue                    # If heads, don't mutate this time.
+            synapse_set = random.choice([input_synapses, hidden_synapses])
+            i = random.randrange(synapse_set.shape[0])
+            j = random.randrange(synapse_set.shape[1])
+            synapse_set[i][j] *= random.random()
+
         return cls(input_synapses, hidden_synapses)
 
     @staticmethod

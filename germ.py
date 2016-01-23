@@ -9,7 +9,7 @@ class Germ:
     speed = 15 # This is an angle, mind you. 
 
 
-    def __init__(self, state, xy: (int, int), bearing: float, color, synapses: ("input_synapses", "hidden_synapses")=(None, None)):
+    def __init__(self, state, xy: (int, int), bearing: float, color, brain=None):
         """
             Creates a germ given the canvas on which to create it, the coordinates, color, and initial velocity.
 
@@ -24,7 +24,7 @@ class Germ:
         # Then moves itself to the given xy coordinate.
         self.state = state
         self.canvas = state.canvas
-        self.brain = Brain.from_random() if not (synapses[0] and synapses[1]) else Brain(*synapses)
+        self.brain = Brain.from_random() if not brain else brain
         self.bearing = bearing
         self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color, tags="germ")
         self.canvas.move(self.body, *xy)
@@ -32,7 +32,7 @@ class Germ:
         self.color = color # Saving this mostly just for debugging purposes.
         
     @classmethod
-    def from_random(cls, state):
+    def from_random(cls, state, brain=None):
         """
             Creates a germ with a random position, color, and velocity. Needs some input, though.
 
@@ -42,7 +42,7 @@ class Germ:
         xy = (random.randint(1, state.canvas.winfo_width()), random.randint(1, state.canvas.winfo_height()))
         bearing = random.randrange(360)
         color = random.choice(cls.germ_colors)
-        return cls(state, xy, bearing, color)
+        return cls(state, xy, bearing, color, brain)
 
     @staticmethod
     def oval_center(bounding_box):

@@ -1,10 +1,13 @@
 #! python
 # vim.py
 
+sample_size = 10
+
 from tkinter import *
 import time, random
 from germ import Germ
 from plank import Plank, Border
+from brain import Brain
 
 root = Tk()
 root.title("The Hunger Planks")
@@ -19,7 +22,10 @@ root.update()
 class State():
     def __init__(self, canvas):
         self.canvas = canvas
-        self.germs = [Germ.from_random(self) for germ_count in range(100)]
+        self.spawn()
+
+    def spawn(self, brains: (Brain for _ in range(sample_size))=(None for _ in range(sample_size))):
+        self.germs = [Germ.from_random(self, brains.__next__()) for _ in range(sample_size)]
         self.planks = [Border(self, (5, 10), 0, self.canvas.winfo_width() - 10, "blue"),
                        Border(self, (5, self.canvas.winfo_height() - 10), 0, self.canvas.winfo_width() - 10, "green"),
                        Border(self, (5, 10), 90, self.canvas.winfo_height() - 10, "red"),
@@ -38,14 +44,19 @@ class State():
 
             if not self.germs:
                 # No germs; pause, cross-mutate best, reset and repopulate.
-                time.sleep(1)
-                # For now just close game and print death_log.
-                root.destroy()
-                print(self.death_log)
+                self.advance_gen()
         elif citizen in self.planks:
             self.planks.remove(citizen)
         elif citizen in self.killers:
             self.killers.remove(citizen)
+
+    def advance_gen(self):
+        # Clear the screen.
+        self.canvas.delete(ALL)
+
+        best_brains = [germ.brain for germ in self.death_log[:30]]
+        new_brains = (Brain.cross_mutate(best_brains) for _ in range(sample_size))
+        self.spawn(new_brains)
 
 state = State(canvas)
 root.update()
