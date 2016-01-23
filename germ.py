@@ -133,7 +133,7 @@ class Germ:
         """
             Checks if the given tag intersects with self. Returns true or false accordingly.
         """
-        center = self.oval_center(self.canvas.bbox(self.body))
+        center = Germ.oval_center(self.canvas.bbox(self.body))
         bone = (center[0] - 5, center[1], center[0] + 5, center[1])
 
         return lines_intersect(bone, raycast)
@@ -144,14 +144,18 @@ class Germ:
             If the object (if any) is a plank, then the float will be negative. If another germ, then it will be positive. If there isn't an object, then 0.
         """
         xy = Germ.oval_center(self.canvas.bbox(self.body))
-        sight_bearings = [offset + self.bearing for offset in range(0, 360, 45)]
+
+        # First get the potential objects seen - if they are within 132 then they might be seen.
+        neighbor_ids = self.canvas.find_overlapping(xy[0] - 132, xy[1] - 132, xy[0] + 132, xy[1] + 132)
+        neighbors = [citizen for citizen in list(sum(self.get_state(), [])) if citizen != self and citizen.body in neighbor_ids]    # Neighbors if not self and is near enough.
+
         sights = []     # Our results array.
-        for bearing in sight_bearings:
+        for bearing in [offset + self.bearing for offset in range(0, 360, 45)]:
             end = (xy[0] + 132 * math.cos(math.radians(bearing)), xy[1] + 132 * math.sin(math.radians(bearing)))
             sightline = xy + end
 
             seen = dict()
-            for citizen in [citizen for citizen in list(sum(self.get_state(), [])) if citizen != self]:
+            for citizen in neighbors:
                 intersect = citizen.seen(sightline)
                 if intersect:
                     seen[citizen] = intersect

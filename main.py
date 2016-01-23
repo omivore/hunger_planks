@@ -26,7 +26,7 @@ def set_state(new_germs, new_planks, new_killers, newly_dead=None):
     if newly_dead:
         death.append(newly_dead)
 
-germs = [Germ.from_random(get_state, set_state, canvas) for germ_count in range(30)]
+germs = [Germ.from_random(get_state, set_state, canvas) for germ_count in range(100)]
 planks = [Border(get_state, set_state, canvas, (5, 10), 0, canvas.winfo_width() - 10, "blue"),
           Border(get_state, set_state, canvas, (5, canvas.winfo_height() - 10), 0, canvas.winfo_width() - 10, "green"),
           Border(get_state, set_state, canvas, (5, 10), 90, canvas.winfo_height() - 10, "red"),
