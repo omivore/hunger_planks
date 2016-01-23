@@ -10,51 +10,65 @@ root = Tk()
 root.title("The Hunger Planks")
 
 canvas = Canvas(root, width=500, height=500)
-canvas.bind("<Button-1>", lambda event: germs.append(Germ.from_random(get_state, canvas)))
-canvas.bind("<Button-3>", lambda event: planks.append(Plank.from_random(canvas)))
+canvas.bind("<Button-1>", lambda event: state.germs.append(Germ.from_random(state)))
+canvas.bind("<Button-3>", lambda event: state.planks.append(Plank.from_random(state)))
 canvas.pack(fill=BOTH, expand=YES)
 
 root.update()
 
-def get_state():
-    return germs, planks, killers
+class State():
+    def __init__(self, canvas):
+        self.canvas = canvas
+        self.germs = [Germ.from_random(self) for germ_count in range(100)]
+        self.planks = [Border(self, (5, 10), 0, self.canvas.winfo_width() - 10, "blue"),
+                       Border(self, (5, self.canvas.winfo_height() - 10), 0, self.canvas.winfo_width() - 10, "green"),
+                       Border(self, (5, 10), 90, self.canvas.winfo_height() - 10, "red"),
+                       Border(self, (self.canvas.winfo_width() - 10, 10), 90, self.canvas.winfo_width() - 10, "yellow")]
+        self.killers = []#Killer.from_random(get_state, set_state, canvas) for killer_count in range(4)]
+        self.death_log = []
 
-def set_state(new_germs, new_planks, new_killers, newly_dead=None):
-    germs = new_germs
-    planks = new_planks
-    killers = new_killers
-    if newly_dead:
-        death.append(newly_dead)
+    def kill(self, citizen):
+        # Remove object from canvas records.
+        self.canvas.delete(citizen.body)
 
-germs = [Germ.from_random(get_state, set_state, canvas) for germ_count in range(100)]
-planks = [Border(get_state, set_state, canvas, (5, 10), 0, canvas.winfo_width() - 10, "blue"),
-          Border(get_state, set_state, canvas, (5, canvas.winfo_height() - 10), 0, canvas.winfo_width() - 10, "green"),
-          Border(get_state, set_state, canvas, (5, 10), 90, canvas.winfo_height() - 10, "red"),
-          Border(get_state, set_state, canvas, (canvas.winfo_width() - 10, 10), 90, canvas.winfo_width() - 10, "yellow")]
-killers = []#Killer.from_random(get_state, set_state, canvas) for killer_count in range(4)]
+        # Remove object from state records.
+        if citizen in self.germs:
+            self.germs.remove(citizen)
+            self.death_log.append(citizen)
 
+            if not self.germs:
+                # No germs; pause, cross-mutate best, reset and repopulate.
+                time.sleep(1)
+                # For now just close game and print death_log.
+                root.destroy()
+                print(self.death_log)
+        elif citizen in self.planks:
+            self.planks.remove(citizen)
+        elif citizen in self.killers:
+            self.killers.remove(citizen)
+
+state = State(canvas)
 root.update()
-death = []
 try:
     spawned = 0
     while True:
-        for germ in germs:
+        for germ in state.germs:
             germ.execute()
             root.update_idletasks()
 
-        for plank in planks:
+        for plank in state.planks:
             plank.move()
             root.update_idletasks()
 
         """
-        for killer in killers:
+        for killer in state.killers:
             killer.move(random.choice([-1,1]), random.choice([-1,1]))
             killer.checkForGerm()
             if killer.dead: killer.remove(killer)
         """
 
         if spawned > 5:
-            if random.choice([0, 1]): planks.append(Plank.from_random(get_state, set_state, canvas))
+            if random.choice([0, 1]): state.planks.append(Plank.from_random(state))
             spawned = 0
         else: spawned += 1
 

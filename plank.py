@@ -8,10 +8,9 @@ class Plank():
     width = 6
     colors = ["red", "black", "orange", "green", "lightgreen"]
 
-    def __init__(self, get_state, set_state, canvas: "tkinter.canvas", start_xy: (int, int), bearing: float, length: int, color, speed: int = 2):
-        self.canvas = canvas
-        self.get_state = get_state
-        self.set_state = set_state
+    def __init__(self, state, start_xy: (int, int), bearing: float, length: int, color, speed: int = 2):
+        self.state = state
+        self.canvas = state.canvas
 
         end_xy = (start_xy[0] + length * math.cos(math.radians(bearing)), 
                   start_xy[1] + length * math.sin(math.radians(bearing)))
@@ -21,13 +20,13 @@ class Plank():
         self.speed = speed
 
     @classmethod
-    def from_random(cls, get_state, set_state, canvas):
-        start_xy = (random.randint(10, canvas.winfo_width() - 10), random.randint(10, canvas.winfo_height() - 10))
+    def from_random(cls, state):
+        start_xy = (random.randint(10, state.canvas.winfo_width() - 10), random.randint(10, state.canvas.winfo_height() - 10))
         bearing = random.randrange(360)
-        length = random.randrange(5, max(canvas.winfo_width(), canvas.winfo_height()) - 100, 8)
+        length = random.randrange(20, max(state.canvas.winfo_width(), state.canvas.winfo_height()) - 200, 8)
         color = random.choice(Plank.colors)
         speed = random.randrange(1, 4)
-        return cls(get_state, set_state, canvas, start_xy, bearing, length, color, speed)
+        return cls(state, start_xy, bearing, length, color, speed)
 
     def move(self):
         self.canvas.move(self.body,
@@ -41,16 +40,12 @@ class Plank():
         return lines_intersect(bone, raycast)
 
     def die(self):
-        self.canvas.delete(self.body)
-        current = self.get_state()
-        current[1].remove(self)
-        self.set_state(*current)
-
+        self.state.kill(self)
 
 class Border(Plank):
 
-    def __init__(self, get_state, set_state, canvas: "tkinter.canvas", start_xy: (int, int), bearing: float, length: int, color):
-        super().__init__(get_state, set_state, canvas, start_xy, bearing, length, color, 0)
+    def __init__(self, state, start_xy: (int, int), bearing: float, length: int, color):
+        super().__init__(state, start_xy, bearing, length, color, 0)
 
     def move(self):
         # Why would a border move? That would be death to all germs.

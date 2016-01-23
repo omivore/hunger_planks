@@ -9,11 +9,11 @@ class Germ:
     speed = 15 # This is an angle, mind you. 
 
 
-    def __init__(self, get_state, set_state, canvas: "tkinter.canvas", xy: (int, int), bearing: float, color, synapses: ("input_synapses", "hidden_synapses")=(None, None)):
+    def __init__(self, state, xy: (int, int), bearing: float, color, synapses: ("input_synapses", "hidden_synapses")=(None, None)):
         """
             Creates a germ given the canvas on which to create it, the coordinates, color, and initial velocity.
 
-            canvas - the tkinter canvas that the germ is being created on
+            state - the world state.
             xy - coordinates; location of the germ. To prevent sticking, must be between 0 and bounding area, _exclusively_.
             color - a tkinter-viable color (can be hex)
         """
@@ -22,9 +22,8 @@ class Germ:
 
         # 'Adopts' the canvas, and then creates itself on the canvas with the color given.
         # Then moves itself to the given xy coordinate.
-        self.get_state = get_state
-        self.set_state = set_state
-        self.canvas = canvas
+        self.state = state
+        self.canvas = state.canvas
         self.brain = Brain.from_random() if not (synapses[0] and synapses[1]) else Brain(*synapses)
         self.bearing = bearing
         self.body = self.canvas.create_oval(0, 0, 11, 11, fill=color, tags="germ")
@@ -33,17 +32,17 @@ class Germ:
         self.color = color # Saving this mostly just for debugging purposes.
         
     @classmethod
-    def from_random(cls, get_state, set_state, canvas: "tkintercanvas"):
+    def from_random(cls, state):
         """
             Creates a germ with a random position, color, and velocity. Needs some input, though.
 
             cls - the current class. Needed to make this a classmethod
-            canvas - the tkinter canvas that the germ is being created on
+            state - the overall world state.
         """
-        xy = (random.randint(1, canvas.winfo_width()), random.randint(1, canvas.winfo_height()))
+        xy = (random.randint(1, state.canvas.winfo_width()), random.randint(1, state.canvas.winfo_height()))
         bearing = random.randrange(360)
         color = random.choice(cls.germ_colors)
-        return cls(get_state, set_state, canvas, xy, bearing, color)
+        return cls(state, xy, bearing, color)
 
     @staticmethod
     def oval_center(bounding_box):
@@ -111,8 +110,8 @@ class Germ:
         for intruder in intruders:
             if "plank" in self.canvas.gettags(intruder):
                 # Kill both parties if colliding with a plank.
-                for citizen in list(sum(self.get_state(), [])):
-                    if citizen.body == intruder: citizen.die()
+                for plank in self.state.planks:
+                    if plank.body == intruder: plank.die()
                 self.die()
                 return
 
@@ -147,7 +146,7 @@ class Germ:
 
         # First get the potential objects seen - if they are within 132 then they might be seen.
         neighbor_ids = self.canvas.find_overlapping(xy[0] - 132, xy[1] - 132, xy[0] + 132, xy[1] + 132)
-        neighbors = [citizen for citizen in list(sum(self.get_state(), [])) if citizen != self and citizen.body in neighbor_ids]    # Neighbors if not self and is near enough.
+        neighbors = [citizen for citizen in self.state.germs + self.state.planks + self.state.killers if citizen != self and citizen.body in neighbor_ids]    # Neighbors if not self and is near enough.
 
         sights = []     # Our results array.
         for bearing in [offset + self.bearing for offset in range(0, 360, 45)]:
@@ -187,10 +186,7 @@ class Germ:
         """
             Removes this germ from the canvas, then removes itself from the world.
         """
-        self.canvas.delete(self.body)
-        current = self.get_state()
-        current[0].remove(self)
-        self.set_state(*current, self)
+        self.state.kill(self)
 
 
 def lines_intersect(line1: (int, int, int, int), line2: (int, int, int, int)) -> bool:
