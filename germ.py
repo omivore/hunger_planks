@@ -129,13 +129,12 @@ class Germ:
                 self.canvas.coords(self.body, (self_new[0] - 5, self_new[1] - 5, self_new[0] + 5, self_new[1] + 5))
                 self.canvas.coords(intruder, (other_new[0] - 5, other_new[1] - 5, other_new[0] + 5, other_new[1] + 5))
 
-    def seen(self, raycast_tag) -> bool:
+    def seen(self, raycast) -> bool:
         """
             Checks if the given tag intersects with self. Returns true or false accordingly.
         """
         center = self.oval_center(self.canvas.bbox(self.body))
         bone = (center[0] - 5, center[1], center[0] + 5, center[1])
-        raycast = self.canvas.coords(self.canvas.find_withtag(raycast_tag)[0])
 
         return lines_intersect(bone, raycast)
 
@@ -149,14 +148,13 @@ class Germ:
         sights = []     # Our results array.
         for bearing in sight_bearings:
             end = (xy[0] + 132 * math.cos(math.radians(bearing)), xy[1] + 132 * math.sin(math.radians(bearing)))
-            sightline = self.canvas.create_line(*xy, *end, tags="raycast")
+            sightline = xy + end
 
             seen = dict()
             for citizen in [citizen for citizen in list(sum(self.get_state(), [])) if citizen != self]:
-                intersect = citizen.seen("raycast")
+                intersect = citizen.seen(sightline)
                 if intersect:
                     seen[citizen] = intersect
-            self.canvas.delete(sightline)
 
             # For each object, calculate the distance away from self. The closest is the one the eye sees.
             closest = (None, 133)   # This will be the closest citizen, and then the distance.
