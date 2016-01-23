@@ -222,3 +222,6 @@ def intersection(line1, line2):
     x = determinate(d, xdiff) / div
     y = determinate(d, ydiff) / div
     return x, y
+
+    self.dead = True
+
