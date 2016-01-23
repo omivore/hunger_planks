@@ -30,7 +30,7 @@ planks = [Border(get_state, set_state, canvas, (5, 10), 0, canvas.winfo_width() 
           Border(get_state, set_state, canvas, (5, canvas.winfo_height() - 10), 0, canvas.winfo_width() - 10, "green"),
           Border(get_state, set_state, canvas, (5, 10), 90, canvas.winfo_height() - 10, "red"),
           Border(get_state, set_state, canvas, (canvas.winfo_width() - 10, 10), 90, canvas.winfo_width() - 10, "yellow")]
-killers = [Killers.from_random(get_state, set_state, canvas) for killer_count in range(4)]
+killers = [Killer.from_random(get_state, set_state, canvas) for killer_count in range(4)]
 
 root.update()
 try:
