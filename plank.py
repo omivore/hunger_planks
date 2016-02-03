@@ -23,9 +23,9 @@ class Plank():
     def from_random(cls, state):
         start_xy = (random.randint(10, state.canvas.winfo_width() - 10), random.randint(10, state.canvas.winfo_height() - 10))
         bearing = random.randrange(360)
-        length = random.randrange(20, max(state.canvas.winfo_width(), state.canvas.winfo_height()) - 200, 8)
+        length = random.randrange(20, min(state.canvas.winfo_width(), state.canvas.winfo_height()) / 2, 8)
         color = random.choice(Plank.colors)
-        speed = random.randrange(1, 4)
+        speed = random.randrange(1, 3)
         return cls(state, start_xy, bearing, length, color, speed)
 
     def move(self):
