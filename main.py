@@ -16,7 +16,7 @@ from brain import Brain
 root = Tk()
 root.title("The Hunger Planks")
 
-canvas = Canvas(root, width=500, height=500)
+canvas = Canvas(root, width=500, height=350)
 canvas.bind("<Button-1>", lambda event: state.germs.append(Germ.from_random(state)))
 canvas.bind("<Button-3>", lambda event: state.planks.append(Plank.from_random(state)))
 canvas.pack(fill=BOTH, expand=YES)

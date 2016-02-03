@@ -40,7 +40,7 @@ class Plank():
         return lines_intersect(bone, raycast)
 
     def die(self):
-        self.state.kill(self)
+        pass
 
 class Border(Plank):
 
