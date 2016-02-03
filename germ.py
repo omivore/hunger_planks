@@ -6,7 +6,7 @@ from brain import Brain
 class Germ:
 
     germ_colors = ["green", "magenta", "purple", "yellow", "cyan", "lavenderblush", "salmon"]
-    speed = 15 # This is an angle, mind you. 
+    speed = 30 # This is an angle, mind you. 
 
 
     def __init__(self, state, xy: (int, int), bearing: float, color, brain=None):

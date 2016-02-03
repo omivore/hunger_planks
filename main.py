@@ -1,10 +1,14 @@
 #! python
 # vim.py
 
-sample_size = 10
+# Program flags.
+sample_size = 50       # The number of initial germs in each generation.
+use_memorized = False   # Whether to pull brains from file, if such a file exists.
+save_last = (True, 5)   # Whether to save the brains, and how many generations to go through before a save.
 
 from tkinter import *
 import time, random
+import pickle
 from germ import Germ
 from plank import Plank, Border
 from brain import Brain
@@ -23,8 +27,13 @@ class State():
     def __init__(self, canvas):
         self.canvas = canvas
         self.spawn()
+        self.current_gen = 0
 
     def spawn(self, brains: (Brain for _ in range(sample_size))=(None for _ in range(sample_size))):
+        if use_memorized:
+            past_brains = import_brains()
+            if past_brains:
+                brains = (brain for brain in past_brains)
         self.germs = [Germ.from_random(self, brains.__next__()) for _ in range(sample_size)]
         self.planks = [Border(self, (5, 10), 0, self.canvas.winfo_width() - 10, "blue"),
                        Border(self, (5, self.canvas.winfo_height() - 10), 0, self.canvas.winfo_width() - 10, "green"),
@@ -53,10 +62,29 @@ class State():
     def advance_gen(self):
         # Clear the screen.
         self.canvas.delete(ALL)
+        root.update()
+        self.current_gen += 1
 
         best_brains = [germ.brain for germ in self.death_log[:30]]
         new_brains = (Brain.cross_mutate(best_brains) for _ in range(sample_size))
+
+        if save_last[0]:
+            if self.current_gen % save_last[1] == 0:
+                self.export_brains(best_brains)
+
         self.spawn(new_brains)
+
+    def export_brains(self, brains: [Brain for _ in range(30)]):
+        with open("brains.pickle", "wb") as file:
+            pickle.dump(brains, file)
+
+    def import_brains(self):
+        try:
+            with open("brains.pickle", "rb") as file:
+                return pickle.load(file)
+        except FileNotFoundError:
+            return None
+
 
 state = State(canvas)
 root.update()
